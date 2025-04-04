@@ -1,0 +1,12 @@
+{
+	"ignorePaths": [
+		"**/settings.json",
+		".git",
+		".gitignore",
+		".idea",
+		".vscode",
+		".vscode-insiders",
+		"vscode-extension"
+	],
+	"language": "en-GB"
+}

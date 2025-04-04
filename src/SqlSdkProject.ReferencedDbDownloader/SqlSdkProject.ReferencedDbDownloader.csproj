@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>ref-db-download</ToolCommandName>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageOutputPath>./nupkg</PackageOutputPath>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENCE</PackageLicenseFile>
+		<IncludeSymbols>True</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>$(RepositoryUrl)</RepositoryUrl>
+		<RepositoryBranch>$(RepositoryBranch)</RepositoryBranch>
+		<RepositoryCommit>$(RepositoryCommit)</RepositoryCommit>
+		<PackageProjectUrl>https://github.com/bit-by-bit-solutions/ref-db-downloader</PackageProjectUrl>
+		<PackageTags>dacpac;.dacpac;SQL;Server;DAC;data-tier;application;reference;referenced;database;download;downloader</PackageTags>
+		<PackageReleaseNotes>Initial release</PackageReleaseNotes>
+		<Description>A tool for downloading referenced database projects in deployment pipelines.</Description>
+		<PackageIcon>Icon.png</PackageIcon>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Build" Condition="'$(TargetFramework)' == 'net8.0'" Version="17.11.4" />
+		<PackageReference Include="Microsoft.Build" Condition="'$(TargetFramework)' == 'net9.0'" Version="17.13.9" />
+		<PackageReference Include="NuGet.Commands" Version="6.13.2" />
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="SqlSdkProject.ReferencedDbDownloader.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\Icon.png">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\LICENCE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+</Project>

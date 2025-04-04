@@ -1,0 +1,8 @@
+{
+	"editor.insertSpaces": false,
+	"markdown.extension.toc.levels": "2..6",
+	"markdown.extension.toc.omittedFromToc": {
+		"CONTRIBUTING.md": ["## Table of contents"],
+		"README.md": ["## Table of contents"]
+	}
+}

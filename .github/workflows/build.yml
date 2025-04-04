@@ -1,0 +1,94 @@
+name: Build and Publish NuGet Package
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DEPENDABOT_REF_NAME: ${{ vars.DEPENDABOT_REF_NAME || 'dependabot' }}
+      PACKAGE_DIRECTORY: ./nupkg
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+          fetch-depth: 0
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v3.2.0
+      with:
+        versionSpec: ${{ vars.GITVERSION_VERSION_SPEC }}
+        preferLatestVersion: ${{ vars.GITVERSION_PREFER_LATEST_VERSION }}
+
+    - name: Determine version
+      id: version
+      uses: gittools/actions/gitversion/execute@v3.2.0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.x
+          9.x
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ vars.SOLUTION_FILE }}
+
+    - name: Build
+      run: >
+        dotnet build
+        ${{ vars.SOLUTION_FILE }}
+        --configuration ${{ vars.BUILD_CONFIG }}
+        --no-restore
+        --nologo
+        -p:Version=${{ steps.version.outputs.semVer }}
+        -p:RepositoryUrl=${{ github.repositoryUrl }}
+        -p:RepositoryBranch=${{ github.ref_name }}
+        -p:RepositoryCommit=${{ github.sha }}
+
+    - name: Run tests
+      run: >
+        dotnet test
+        ${{ vars.SOLUTION_FILE }}
+        --configuration ${{ vars.BUILD_CONFIG }}
+        --no-build
+        --nologo
+
+    - name: Pack
+      if: ${{ !startsWith(github.head_ref || github.ref_name, env.DEPENDABOT_REF_NAME) }}
+      run: >
+        dotnet pack
+        ${{ vars.SOLUTION_FILE }}
+        --configuration ${{ vars.BUILD_CONFIG }}
+        --no-restore
+        --no-build
+        --nologo
+        --output ${{ env.PACKAGE_DIRECTORY }}
+        -p:PackageVersion=${{ steps.version.outputs.semVer }}
+        -p:RepositoryUrl=${{ github.repositoryUrl }}
+        -p:RepositoryBranch=${{ github.ref_name }}
+        -p:RepositoryCommit=${{ github.sha }}
+
+    - name: Publish to NuGet
+      if: ${{ !startsWith(github.head_ref || github.ref_name, env.DEPENDABOT_REF_NAME) }}
+      run: >
+        dotnet nuget push
+        ${{ env.PACKAGE_DIRECTORY }}/*.nupkg
+        --source ${{ vars.NUGET_REPOSITORY }}
+        --api-key ${{ secrets.NUGET_API_KEY }}
+
+    - name: Publish symbols to NuGet
+      if: ${{ !startsWith(github.head_ref || github.ref_name, env.DEPENDABOT_REF_NAME) }}
+      run: >
+        dotnet nuget push
+        ${{ env.PACKAGE_DIRECTORY }}/*.snupkg
+        --source ${{ vars.NUGET_REPOSITORY }}
+        --api-key ${{ secrets.NUGET_API_KEY }}

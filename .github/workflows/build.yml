@@ -84,11 +84,3 @@ jobs:
         ${{ env.PACKAGE_DIRECTORY }}/*.nupkg
         --source ${{ vars.NUGET_REPOSITORY }}
         --api-key ${{ secrets.NUGET_API_KEY }}
-
-    - name: Publish symbols to NuGet
-      if: ${{ !startsWith(github.head_ref || github.ref_name, env.DEPENDABOT_REF_NAME) }}
-      run: >
-        dotnet nuget push
-        ${{ env.PACKAGE_DIRECTORY }}/*.snupkg
-        --source ${{ vars.NUGET_REPOSITORY }}
-        --api-key ${{ secrets.NUGET_API_KEY }}

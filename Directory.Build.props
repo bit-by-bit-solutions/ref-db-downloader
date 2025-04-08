@@ -12,7 +12,7 @@
 		<Authors>Bit by Bit Solutions Ltd</Authors>
 		<Company>Bit by Bit Solutions Ltd</Company>
 		<CompanyId>BitByBit</CompanyId>
-		<Copyright>Copyright © 2025 Bit by Bit Solutions</Copyright>
+		<Copyright>Copyright © 2025 Bit by Bit Solutions Ltd</Copyright>
 		<PackageId>$(CompanyId).$(MSBuildProjectName)</PackageId>
 	</PropertyGroup>
 

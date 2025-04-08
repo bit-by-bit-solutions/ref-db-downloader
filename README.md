@@ -1,5 +1,16 @@
 # SDK-style SQL Database Project Referenced Database Downloader Tool
 
+[![Licence](https://img.shields.io/badge/licence-MIT-blue)](LICENCE)
+![GitHub Actions Build Status](https://img.shields.io/github/actions/workflow/status/bit-by-bit-solutions/ref-db-downloader/build.yml)
+![NuGet Version](https://img.shields.io/nuget/v/BitByBit.SqlSdkProject.ReferencedDbDownloader)
+
+## Table of contents
+
+- [Overview](#overview)
+- [Usage](#usage)
+  - [Global install](#global-install)
+  - [Local install](#local-install)
+
 ## Overview
 
 This tool is intended for use in deployment pipelines that make use of [SqlPackage](https://learn.microsoft.com/en-us/sql/tools/sqlpackage/sqlpackage) for deploying SQL Server databases as data tier applications (DAC, `.dacpac` files), in particular those that include database references in the form of package references.
@@ -18,5 +29,12 @@ If the tool can't find a `.sln` solution file it will throw an error.
 
 ## Usage
 
-1. `dotnet tool install ref-db-download --global` (omit `--global` for a local install)
-2. `ref-db-download --project "/path/to/your.sqlproj" --outputDirectory "/tmp/outdir"`
+To install the tool run `dotnet tool install --global BitByBit.SqlSdkProject.ReferencedDbDownloader` (omit `--global` for a local install).
+
+### Global install
+
+Run `ref-db-download --project "/path/to/your.sqlproj" --outputDirectory "/tmp/outdir"`.
+
+### Local install
+
+Run `dotnet tool ref-db-download --project "/path/to/your.sqlproj" --outputDirectory "/tmp/outdir"` or `dotnet ref-db-download --project "/path/to/your.sqlproj" --outputDirectory "/tmp/outdir"`.

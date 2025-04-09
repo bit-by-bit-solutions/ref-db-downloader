@@ -66,7 +66,6 @@ internal sealed class DacPacDownloader : IDisposable
 
 		return project.Items
 			.Where(IsPackageReference)
-			.Where(IsReferencedDatabase)
 			.Where(HasVersionElement)
 			.Select(CreateDatabasePackageReference)
 			.ToImmutableList();
@@ -81,9 +80,6 @@ internal sealed class DacPacDownloader : IDisposable
 
 	private static bool IsPackageReference(ProjectItemElement projectItemElement) =>
 		projectItemElement.ItemType == "PackageReference";
-
-	private static bool IsReferencedDatabase(ProjectItemElement projectItemElement) =>
-		projectItemElement.Metadata.Any(projectMetadataElement => projectMetadataElement.Name == "DatabaseSqlCmdVariable");
 
 	private static DirectoryInfo GetSolutionDirectory(string projectFile)
 	{
@@ -136,17 +132,19 @@ internal sealed class DacPacDownloader : IDisposable
 		}
 
 		packageStream.Position = 0;
-		await ExtractDacPacFiles(packageStream, cancellationToken);
+		int filesFound = await ExtractDacPacFiles(packageStream, cancellationToken);
+		ReportFilesFound(filesFound, packageRef);
 
 		return true;
 	}
 
-	private async Task ExtractDacPacFiles(Stream packageStream, CancellationToken cancellationToken)
+	private async Task<int> ExtractDacPacFiles(Stream packageStream, CancellationToken cancellationToken)
 	{
 		using var packageReader = new PackageArchiveReader(packageStream);
-		IEnumerable<string> files = await packageReader.GetFilesAsync("tools", cancellationToken);
+		List<string> dacpacFiles = (await packageReader.GetFilesAsync("tools", cancellationToken))
+			.Where(f => Path.GetExtension(f).Equals(".dacpac", StringComparison.OrdinalIgnoreCase)).ToList();
 
-		foreach (string file in files.Where(f => Path.GetExtension(f).Equals(".dacpac", StringComparison.OrdinalIgnoreCase)))
+		foreach (string file in dacpacFiles)
 		{
 			string fileName = Path.GetFileName(file);
 			packageReader.ExtractFile(
@@ -156,7 +154,14 @@ internal sealed class DacPacDownloader : IDisposable
 
 			progress.Report($"Downloaded {fileName}");
 		}
+
+		return dacpacFiles.Count;
 	}
+
+	private void ReportFilesFound(int filesFound, DatabasePackageReference dbPackageReference) =>
+		progress.Report(filesFound == 0
+			? $"No DACPAC files found in package {dbPackageReference.Id}.{dbPackageReference.Version}"
+			: $"Extracted {filesFound} DACPAC files from {dbPackageReference.Id}.{dbPackageReference.Version}");
 
 	private sealed record DatabasePackageReference(string Id, string Version);
 }

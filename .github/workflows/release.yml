@@ -1,0 +1,31 @@
+name: Release to NuGet
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version to release'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE_DIRECTORY: ./nupkg
+
+    steps:
+    - name: Download package artefacts
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-package-${{ inputs.version }}
+        path: packages
+
+    - name: Publish to NuGet
+      run: >
+        dotnet nuget push
+        ${{ env.PACKAGE_DIRECTORY }}/*.nupkg
+        --source ${{ vars.NUGET_REPOSITORY }}
+        --api-key ${{ secrets.NUGET_API_KEY }}

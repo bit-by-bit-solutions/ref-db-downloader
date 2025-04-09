@@ -1,7 +1,7 @@
 # SDK-style SQL Database Project Referenced Database Downloader Tool
 
 [![Licence](https://img.shields.io/badge/licence-MIT-blue)](LICENCE)
-![GitHub Actions Build Status](https://img.shields.io/github/actions/workflow/status/bit-by-bit-solutions/ref-db-downloader/build.yml)
+![GitHub Actions Build Status](https://img.shields.io/github/actions/workflow/status/bit-by-bit-solutions/ref-db-downloader/ci.yml)
 ![NuGet Version](https://img.shields.io/nuget/v/BitByBit.SqlSdkProject.ReferencedDbDownloader)
 
 ## Table of contents

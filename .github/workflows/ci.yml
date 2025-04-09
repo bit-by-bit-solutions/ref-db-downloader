@@ -67,6 +67,7 @@ jobs:
         --
         --report-trx
         --coverage
+        --coverage-output coverage.cobertura.xml
         --coverage-output-format cobertura
 
     - name: Upload test results

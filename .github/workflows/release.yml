@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   publish:
@@ -18,10 +19,13 @@ jobs:
 
     steps:
     - name: Download package artefacts
-      uses: actions/download-artifact@v4
+      uses: dawidd6/action-download-artifact@v9
       with:
         name: nuget-package-${{ inputs.version }}
-        path: packages
+        workflow: ci.yml
+        path: ${{ env.PACKAGE_DIRECTORY }}
+        search_artifacts: true
+        if_no_artifact_found: fail
 
     - name: Publish to NuGet
       run: >

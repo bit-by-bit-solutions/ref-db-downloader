@@ -10,6 +10,7 @@ namespace SqlSdkProject.ReferencedDbDownloader;
 internal sealed class DacPacDownloader : IDisposable
 {
 	private readonly SourceCacheContext cacheContext = new();
+	private readonly List<DatabasePackageReference> downloadedPackages = [];
 	private readonly SqlProjectFile projectFile;
 	private readonly OutputDirectory outputDirectory;
 	private readonly IProgress<string> progress;
@@ -21,18 +22,20 @@ internal sealed class DacPacDownloader : IDisposable
 		this.progress = progress;
 	}
 
+	internal ImmutableList<DatabasePackageReference> AdditionalPackagesToDownload { get; init; } = [];
+
 	public void Dispose() => cacheContext.Dispose();
 
 	internal async Task DownloadFiles(CancellationToken cancellationToken)
 	{
-		IImmutableList<DatabasePackageReference> packageRefs = GetDatabasePackageReferences(projectFile);
+		ImmutableList<DatabasePackageReference> packageRefs = GetDatabasePackageReferences();
 		if (packageRefs.Count == 0)
 		{
 			progress.Report("No package references found. Exiting.");
 			return;
 		}
 
-		string solutionDirectory = GetSolutionDirectory(projectFile).FullName;
+		string solutionDirectory = GetSolutionDirectory().FullName;
 		ISettings settings = Settings.LoadDefaultSettings(solutionDirectory);
 		IImmutableList<SourceRepository> repositories = GetSourceRepositories(settings);
 
@@ -47,7 +50,7 @@ internal sealed class DacPacDownloader : IDisposable
 			await DownloadPackageAndExtractDacPacFiles(packageRef, repositories, cancellationToken);
 		}
 
-		progress.Report("All packages processed successfully");
+		ReportProgress(packageRefs);
 	}
 
 	private static IImmutableList<SourceRepository> GetSourceRepositories(ISettings settings)
@@ -57,18 +60,6 @@ internal sealed class DacPacDownloader : IDisposable
 			Repository.Provider.GetCoreV3());
 
 		return [..sourceRepositoryProvider.GetRepositories()];
-	}
-
-	private static ImmutableList<DatabasePackageReference> GetDatabasePackageReferences(string projectFile)
-	{
-		ProjectRootElement project = ProjectRootElement.Open(projectFile)
-			?? throw new ArgumentException("Unable to open the project file.", nameof(projectFile));
-
-		return project.Items
-			.Where(IsPackageReference)
-			.Where(HasVersionElement)
-			.Select(CreateDatabasePackageReference)
-			.ToImmutableList();
 	}
 
 	private static DatabasePackageReference CreateDatabasePackageReference(ProjectItemElement projectItemElement) => new(
@@ -81,10 +72,13 @@ internal sealed class DacPacDownloader : IDisposable
 	private static bool IsPackageReference(ProjectItemElement projectItemElement) =>
 		projectItemElement.ItemType == "PackageReference";
 
-	private static DirectoryInfo GetSolutionDirectory(string projectFile)
+	private static bool DirectoryDoesNotContainSolutionFile(DirectoryInfo directory) =>
+		directory.GetFiles("*.sln", new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }).Length == 0;
+
+	private DirectoryInfo GetSolutionDirectory()
 	{
 		string directoryName = Path.GetDirectoryName(projectFile) ??
-			throw new ArgumentException("Unable to get directory from project file path.", nameof(projectFile));
+			throw new InvalidOperationException("Unable to get directory from project file path.");
 
 		var directory = new DirectoryInfo(directoryName);
 		while (directory is not null && DirectoryDoesNotContainSolutionFile(directory))
@@ -96,8 +90,18 @@ internal sealed class DacPacDownloader : IDisposable
 		return directory;
 	}
 
-	private static bool DirectoryDoesNotContainSolutionFile(DirectoryInfo directory) =>
-		directory.GetFiles("*.sln", new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }).Length == 0;
+	private ImmutableList<DatabasePackageReference> GetDatabasePackageReferences()
+	{
+		ProjectRootElement project = ProjectRootElement.Open(projectFile)
+			?? throw new InvalidOperationException("Unable to open the project file.");
+
+		return project.Items
+			.Where(IsPackageReference)
+			.Where(HasVersionElement)
+			.Select(CreateDatabasePackageReference)
+			.Union(AdditionalPackagesToDownload)
+			.ToImmutableList();
+	}
 
 	private async Task DownloadPackageAndExtractDacPacFiles(
 		DatabasePackageReference packageRef,
@@ -135,6 +139,8 @@ internal sealed class DacPacDownloader : IDisposable
 		int filesFound = await ExtractDacPacFiles(packageStream, cancellationToken);
 		ReportFilesFound(filesFound, packageRef);
 
+		downloadedPackages.Add(packageRef);
+
 		return true;
 	}
 
@@ -163,5 +169,15 @@ internal sealed class DacPacDownloader : IDisposable
 			? $"No DACPAC files found in package {dbPackageReference.Id}.{dbPackageReference.Version}"
 			: $"Extracted {filesFound} DACPAC files from {dbPackageReference.Id}.{dbPackageReference.Version}");
 
-	private sealed record DatabasePackageReference(string Id, string Version);
+	private void ReportProgress(IReadOnlyList<DatabasePackageReference> expectedPackages)
+	{
+		IEnumerable<DatabasePackageReference> missedPackages = expectedPackages.Except(downloadedPackages).ToList();
+		if (missedPackages.Any())
+		{
+			progress.Report($"The following packages were not downloaded: {string.Join(", ", missedPackages)}");
+			return;
+		}
+
+		progress.Report("All packages downloaded successfully");
+	}
 }

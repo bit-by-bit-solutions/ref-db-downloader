@@ -17,7 +17,6 @@
 		<RepositoryCommit>$(RepositoryCommit)</RepositoryCommit>
 		<PackageProjectUrl>https://github.com/bit-by-bit-solutions/ref-db-downloader</PackageProjectUrl>
 		<PackageTags>dacpac;.dacpac;SQL;Server;DAC;data-tier;application;reference;referenced;database;download;downloader</PackageTags>
-		<PackageReleaseNotes>Initial release</PackageReleaseNotes>
 		<Description>A tool for downloading referenced database projects in deployment pipelines.</Description>
 		<PackageIcon>Icon.png</PackageIcon>
 	</PropertyGroup>

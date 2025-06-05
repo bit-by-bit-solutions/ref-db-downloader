@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
@@ -22,9 +22,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Build" Condition="'$(TargetFramework)' == 'net8.0'" Version="17.11.4" />
+		<PackageReference Include="Microsoft.Build" Condition="'$(TargetFramework)' == 'net8.0'" Version="17.13.9" />
 		<PackageReference Include="Microsoft.Build" Condition="'$(TargetFramework)' == 'net9.0'" Version="17.13.9" />
-		<PackageReference Include="NuGet.Commands" Version="6.13.2" />
+		<PackageReference Include="NuGet.Commands" Version="6.14.0" />
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
 	</ItemGroup>
 
